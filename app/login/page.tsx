@@ -44,7 +44,7 @@ export default function LoginPage() {
           {sent ? "Link Sent!" : "Send Link"}
         </button>
       </form>
-      {sent && <p className="text-white text-2xl mt-4">Check your email</p>}
+      {sent && <p className="text-white text-2xl mt-4">Check Your Email!</p>}
     </div>
   );
 }
