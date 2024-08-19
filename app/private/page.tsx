@@ -1,11 +1,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import ChatArea from "@/components/ChatArea";
-import { cookies } from 'next/headers'
 
-const supabase = createClient();
 export default async function PrivatePage() {
-  const cookieStore = cookies()
+  const supabase = createClient();
   const { data, error } = await supabase.auth.getUser();
 
   if (error || !data?.user) {
