@@ -2,7 +2,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TextAnimate } from "@/components/ui/text-animate";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function Home() {
   type Chats = {
@@ -13,6 +13,7 @@ export default function Home() {
   const [chats, setChats] = useState<Chats[]>([]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null); // Reference for scrolling
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -20,11 +21,10 @@ export default function Home() {
       const currentInputText = inputText;
       setInputText("");
       setIsLoading(true);
-      setChats([...chats, { userText: inputText, botText: "" }]);
-      // setChats((prevChats) => [
-      //   ...prevChats,
-      //   { userText: currentInputText, botText: "" },
-      // ]);
+      setChats((prevChats) => [
+        ...prevChats,
+        { userText: currentInputText, botText: "" },
+      ]);
 
       try {
         const response = await fetch(`/api`, {
@@ -40,9 +40,7 @@ export default function Home() {
           throw new Error("Network response was not ok");
         }
 
-        let x = await response.json();
-
-        // console.log("This is the response", x.message);
+        const x = await response.json();
         setChats((prevChats) =>
           prevChats.map((chat, index) =>
             index === prevChats.length - 1
@@ -55,57 +53,70 @@ export default function Home() {
       } finally {
         setIsLoading(false); // Stop loading
       }
-      // console.log("This is chats", chats);
     }
   };
 
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [chats]);
+
   return (
-    <main className="flex h-full flex-col items-center justify-between px-4">
-       {chats.length === 0 ? (
+    <main className="flex h-[88vh] flex-col items-center justify-between px-4">
+      {chats.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-[70vh]">
           <div className="text-3xl text-white mb-4">
-            <TextAnimate text="Welcome to AIDA" type="popIn" className="text-white"/>
-            </div>
+            <TextAnimate
+              text="Welcome to AIDA"
+              type="popIn"
+              className="text-white"
+            />
+          </div>
           <div className="text-2xl text-white mb-8 hidden md:block">
-          {/* Digital Assistant for Government Query */}
-          <TextAnimate text="Digital Assistant for Government Query" type="popIn" className="text-white"/>
+            {/* Digital Assistant for Government Query */}
+            <TextAnimate
+              text="Digital Assistant for Government Query"
+              type="popIn"
+              className="text-white"
+            />
           </div>
           <p className="text-lg text-gray-300">
             Ask me anything, I'm here to help you!
           </p>
         </div>
       ) : (
-      <ScrollArea className="h-[70vh] md:h-[78vh] w-full rounded-md p-2">
-        {chats.map((chat, index) => (
-          <div key={index} className="text-white">
-            {/* Render the user text aligned right */}
-            <div className="w-full p-2 flex justify-end">
-              <div className="w-fit py-4 px-4 rounded-3xl text-white max-w-3xl bg-blue-600">
-                {chat.userText}
-              </div>
-            </div>
-            {/* Render the bot text aligned left if it exists */}
-            {chat.botText && (
-              <div className="w-full p-2 flex justify-start">
-                <div className="w-fit py-4 px-4 rounded-3xl text-white max-w-3xl bg-green-600">
-                  {chat.botText}
+        <div
+          ref={scrollRef}
+          className="h-full w-full rounded-md p-2 overflow-y-auto"
+        >
+          {chats.map((chat, index) => (
+            <div key={index} className="text-white">
+              <div className="w-full p-2 flex justify-end">
+                <div className="w-fit py-4 px-4 rounded-3xl text-white max-w-80 bg-blue-600">
+                  {chat.userText}
                 </div>
               </div>
-            )}
-          </div>
-        ))}
-        {isLoading && (
-          <div className="w-full p-2 flex justify-start">
-            <div className="w-fit py-4 px-4 rounded-3xl text-white max-w-3xl bg-green-600">
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-[250px] bg-gray-300" />
-                <Skeleton className="h-4 w-[200px] bg-gray-300" />
-              </div>
-              {/* <span>Bot is typing...</span> */}
+              {chat.botText && (
+                <div className="w-full p-2 flex justify-start">
+                  <div className="w-fit py-4 px-4 rounded-3xl text-white max-w-80 bg-green-600">
+                    {chat.botText}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
-      </ScrollArea>
+          ))}
+          {isLoading && (
+            <div className="w-full p-2 flex justify-start">
+              <div className="w-fit py-4 px-4 rounded-3xl text-white max-w-80 bg-green-600">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-[250px] bg-gray-300" />
+                  <Skeleton className="h-4 w-[200px] bg-gray-300" />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       <div className="py-3 w-full flex justify-center max-h-20 text-white">
